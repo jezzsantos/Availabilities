@@ -3,7 +3,7 @@
 namespace Availabilities.Apis.ServiceOperations.Bookings
 {
     [Route("/bookings", "GET")]
-    public class GetAllBookingsRequest
+    public class GetAllBookingsRequest : IReturn<GetAllBookingsResponse>, IGet
     {
     }
 }

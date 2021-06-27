@@ -1,6 +1,5 @@
 ﻿using Availabilities.Apis.Application;
 using Availabilities.Apis.ServiceOperations.Bookings;
-using Availabilities.Other;
 using Availabilities.Resources;
 using Availabilities.Storage;
 using ServiceStack;
@@ -9,33 +8,28 @@ namespace Availabilities.Apis.Services
 {
     internal class BookingsService : Service
     {
-        private readonly IAvailabilitiesService availabilitiesService;
+        private readonly IAvailabilitiesApplication availabilitiesApplication;
         private readonly IStorage<Booking> storage;
 
-        public BookingsService(IStorage<Booking> storage, IAvailabilitiesService availabilitiesService)
+        public BookingsService(IStorage<Booking> storage, IAvailabilitiesApplication availabilitiesApplication)
         {
             this.storage = storage;
-            this.availabilitiesService = availabilitiesService;
+            this.availabilitiesApplication = availabilitiesApplication;
         }
 
         public CreateBookingResponse Post(CreateBookingRequest request)
         {
+            var requestedSlot = new TimeSlot(request.StartUtc, request.EndUtc);
+
+            var availableSlot = this.availabilitiesApplication.ReserveAvailability(requestedSlot);
+
             var booking = new Booking
             {
-                StartUtc = request.StartUtc,
-                EndUtc = request.EndUtc,
+                StartUtc = availableSlot.Start,
+                EndUtc = availableSlot.End,
                 Description = request.Description
             };
-
-            var isAvailable = availabilitiesService.IsAvailable(request.StartUtc, request.EndUtc);
-            if (!isAvailable)
-            {
-                throw new ResourceConflictException("The booking cannot be made for this time period");
-            }
-
-            availabilitiesService.ReserveAvailability(request.StartUtc, request.EndUtc);
-
-            storage.Upsert(booking);
+            this.storage.Upsert(booking);
 
             return new CreateBookingResponse
             {
@@ -43,9 +37,9 @@ namespace Availabilities.Apis.Services
             };
         }
 
-        public GetAllBookingsResponse Post(GetAllBookingsRequest request)
+        public GetAllBookingsResponse Get(GetAllBookingsRequest request)
         {
-            var bookings = storage.List();
+            var bookings = this.storage.List();
 
             return new GetAllBookingsResponse
             {
@@ -53,13 +47,13 @@ namespace Availabilities.Apis.Services
             };
         }
 
-        public DeleteBookingResponse Post(DeleteBookingRequest request)
+        public DeleteBookingResponse Delete(DeleteBookingRequest request)
         {
-            var booking = storage.Get(request.Id);
+            var booking = this.storage.Get(request.Id);
+            this.storage.Delete(request.Id);
 
-            storage.Delete(request.Id);
-
-            availabilitiesService.ReleaseAvailability(booking.StartUtc, booking.EndUtc);
+            var slot = new TimeSlot(booking.StartUtc, booking.EndUtc);
+            this.availabilitiesApplication.ReleaseAvailability(slot);
 
             return new DeleteBookingResponse();
         }

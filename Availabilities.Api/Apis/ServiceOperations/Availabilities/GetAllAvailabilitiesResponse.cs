@@ -5,6 +5,6 @@ namespace Availabilities.Apis.ServiceOperations.Availabilities
 {
     public class GetAllAvailabilitiesResponse
     {
-        public List<Availability> Availabilitites { get; set; }
+        public List<Availability> Availabilities { get; set; }
     }
 }

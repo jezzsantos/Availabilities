@@ -5,22 +5,22 @@ using ServiceStack;
 
 namespace Availabilities.Apis.Services
 {
-    internal class AvailabilityService : Service
+    internal class AvailabilitiesService : Service
     {
         private readonly IStorage<Availability> storage;
 
-        public AvailabilityService(IStorage<Availability> storage)
+        public AvailabilitiesService(IStorage<Availability> storage)
         {
             this.storage = storage;
         }
 
         public GetAllAvailabilitiesResponse Get(GetAllAvailabilitiesRequest request)
         {
-            var availabilities = storage.List();
+            var availabilities = this.storage.List();
 
             return new GetAllAvailabilitiesResponse
             {
-                Availabilitites = availabilities
+                Availabilities = availabilities
             };
         }
     }

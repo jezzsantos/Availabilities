@@ -4,7 +4,7 @@ using ServiceStack;
 namespace Availabilities.Apis.ServiceOperations.Bookings
 {
     [Route("/bookings", "POST")]
-    public class CreateBookingRequest
+    public class CreateBookingRequest : IReturn<CreateBookingResponse>, IPost
     {
         public DateTime StartUtc { get; set; }
         public DateTime EndUtc { get; set; }

@@ -12,7 +12,7 @@ namespace Availabilities.Storage
 
         public List<TEntity> List()
         {
-            return store
+            return this.store
                 .Select(pair => pair.Value)
                 .ToList();
         }
@@ -24,13 +24,13 @@ namespace Availabilities.Storage
                 entity.Id = GenerateEntityId();
             }
 
-            if (store.ContainsKey(entity.Id))
+            if (this.store.ContainsKey(entity.Id))
             {
-                store[entity.Id] = entity;
+                this.store[entity.Id] = entity;
             }
             else
             {
-                store.Add(entity.Id, entity);
+                this.store.Add(entity.Id, entity);
             }
         }
 
@@ -41,9 +41,9 @@ namespace Availabilities.Storage
                 throw new ResourceNotFoundException();
             }
 
-            if (store.ContainsKey(id))
+            if (this.store.ContainsKey(id))
             {
-                store.Remove(id);
+                this.store.Remove(id);
             }
         }
 
@@ -54,12 +54,17 @@ namespace Availabilities.Storage
                 throw new ResourceNotFoundException();
             }
 
-            if (!store.ContainsKey(id))
+            if (!this.store.ContainsKey(id))
             {
                 throw new ResourceNotFoundException();
             }
 
-            return store[id];
+            return this.store[id];
+        }
+
+        public void DestroyAll()
+        {
+            this.store.Clear();
         }
 
         private static string GenerateEntityId()

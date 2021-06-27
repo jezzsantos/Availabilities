@@ -9,22 +9,27 @@ namespace Availabilities.Storage
 
         public List<Booking> List()
         {
-            return store.List();
+            return this.store.List();
         }
 
         public void Upsert(Booking entity)
         {
-            store.Upsert(entity);
+            this.store.Upsert(entity);
         }
 
         public void Delete(string id)
         {
-            store.Delete(id);
+            this.store.Delete(id);
         }
 
         public Booking Get(string id)
         {
-            return store.Get(id);
+            return this.store.Get(id);
+        }
+
+        public void DestroyAll()
+        {
+            this.store.DestroyAll();
         }
     }
 }

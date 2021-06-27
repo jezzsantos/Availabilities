@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Net;
 using System.Reflection;
 using Availabilities.Apis.Application;
 using Availabilities.Other;
@@ -6,7 +8,9 @@ using Availabilities.Resources;
 using Availabilities.Storage;
 using Funq;
 using ServiceStack;
+using ServiceStack.FluentValidation;
 using ServiceStack.Text;
+using ServiceStack.Validation;
 
 namespace Availabilities
 {
@@ -28,7 +32,14 @@ namespace Availabilities
                 DebugMode = true,
                 HandlerFactoryPath = "api",
                 DefaultRedirectPath = "/metadata",
-                ReturnsInnerException = true
+                ReturnsInnerException = true,
+                MapExceptionToStatusCode = new Dictionary<Type, int>
+                {
+                    {typeof(ValidationException), (int) HttpStatusCode.BadRequest},
+                    {typeof(ArgumentException), (int) HttpStatusCode.BadRequest},
+                    {typeof(ResourceNotFoundException), (int) HttpStatusCode.NotFound},
+                    {typeof(ResourceConflictException), (int) HttpStatusCode.Conflict}
+                }
             });
 
             JsConfig.DateHandler = DateHandler.ISO8601;
@@ -45,9 +56,12 @@ namespace Availabilities
                 ? null
                 : dt.Value.ToIso8601();
 
+            Plugins.Add(new ValidationFeature());
+            container.RegisterValidators();
+
             container.AddSingleton<IStorage<Availability>, AvailabilityStorage>();
             container.AddSingleton<IStorage<Booking>, BookingStorage>();
-            container.AddSingleton<IAvailabilitiesService, AvailabilitiesService>();
+            container.AddSingleton<IAvailabilitiesApplication, AvailabilitiesApplication>();
         }
     }
 }
