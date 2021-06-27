@@ -15,17 +15,18 @@ namespace Availabilities.Apis.Application
 
         public TimeSlot ReserveAvailability(TimeSlot slot)
         {
-            //TODO: remember to round up the slot times to the next quarter hour
-            //TODO: remember to determine what data needs to be changed to remove this availability
-            //TODO: Remember to throw new ResourceConflictException("The booking cannot be made for this time period") if not available
-            //TODO: remember to return the actual slot
+            //TODO: remember to round up the slot times to the nearest quarter hour
+            //TODO: remember to determine what data needs to be changed to remove this slot from the current availability slots
+            //TODO: Remember to throw new ResourceConflictException("The booking cannot be made for this time period") if there is not enough availability to cover it
+            //TODO: remember to return the actual slot that was made available
 
             throw new NotImplementedException();
         }
 
         public void ReleaseAvailability(TimeSlot slot)
         {
-            //TODO: remember to determine what data needs to be changed to add this availability back
+            //TODO: remember to determine what data needs to be changed to add this availability slot back into the current set of availability.
+            //TODO: remember that availability is represented in contiguous blocks of time, never adjacent to each other.
 
             throw new NotImplementedException();
         }
