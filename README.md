@@ -49,12 +49,23 @@ The data store behind this API is an in-memory store that has been deliberately 
 
 * Install Jetbrains Rider IDE.
 * Fork this source code repo to your own git repo, and checkout the `master` branch
-* Hit F5 to run the API, and use Postman (or similar) to call the API's above.
+* Hit F5 to run the API, and use Postman (or similar) to call the API's above, for example,`GET https://localhost:5001/api/availabilities` should return the data, something like this:
+```json
+{
+    "availabilities": [
+        {
+            "startUtc": "2020-01-01T12:00:00.0000000Z",
+            "endUtc": "2050-01-01T12:00:00.0000000Z",
+            "id": "5322b21221a24f3484bea6291db02bb5"
+        }
+    ]
+}
+```
 
 ## Step 1
-Now, you have less than an hour to complete the implementation of the `IAvailabilitiesService` interface to achieve the goals of the first exercise. 
+Now, you have an hour to complete the implementation of the `IAvailabilitiesApplication` interface to achieve the goals of the first exercise. 
 
-Do that in a pair, and ignore any test-driven-development approaches, just code the solution as you normally would today, no tests.
+Do that in a pair (if available), and ignore any test-driven-development approaches. Just code the solution as you normally would today.
 
 ## Step 2
 
