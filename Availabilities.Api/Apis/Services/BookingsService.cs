@@ -19,7 +19,7 @@ namespace Availabilities.Apis.Services
 
         public CreateBookingResponse Post(CreateBookingRequest request)
         {
-            var requestedSlot = new TimeSlot(request.StartUtc, request.EndUtc);
+            var requestedSlot = new TimeSlot(request.StartUtc, request.DurationInMins);
 
             var availableSlot = this.availabilitiesApplication.ReserveAvailability(requestedSlot);
 

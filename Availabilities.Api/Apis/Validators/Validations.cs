@@ -6,8 +6,10 @@ namespace Availabilities.Apis.Validators
     {
         public static class Bookings
         {
-            public const int MinimumBookingLengthInMinutes = 15;
-            public const int MaximumBookingLengthInMinutes = 180;
+            public const int BookingIncrementInMinutes = 15;
+            private const int MaximumBookingIncrements = 12;
+            public const int MinimumBookingLengthInMinutes = BookingIncrementInMinutes * 1;
+            public const int MaximumBookingLengthInMinutes = BookingIncrementInMinutes * MaximumBookingIncrements;
         }
 
         public class Availabilities

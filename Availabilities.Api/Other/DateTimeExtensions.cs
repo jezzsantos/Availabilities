@@ -4,13 +4,6 @@ namespace Availabilities.Other
 {
     public static class DateTimeExtensions
     {
-        public enum DateRounding
-        {
-            Nearest = 0,
-            Up = 1,
-            Down = 2
-        }
-
         public static bool HasValue(this DateTime current)
         {
             if (current.Kind == DateTimeKind.Local)
@@ -55,19 +48,29 @@ namespace Availabilities.Other
                 : DateTime.MinValue;
         }
 
+        public static DateTime SubtractSeconds(this DateTime value, int seconds)
+        {
+            return value.AddSeconds(-seconds);
+        }
+
         public static DateTime SubtractMinutes(this DateTime value, int minutes)
         {
             return value.AddMinutes(-minutes);
         }
 
-        public static DateTime FiveMinutesLater(this DateTime value)
+        public static DateTime SubtractHours(this DateTime value, int hours)
         {
-            return value.AddMinutes(5);
+            return value.AddHours(-hours);
         }
 
-        public static DateTime FiveMinutesEarlier(this DateTime value)
+        public static DateTime FifteenMinutesLater(this DateTime value)
         {
-            return value.SubtractMinutes(5);
+            return value.AddMinutes(15);
+        }
+
+        public static DateTime FifteenMinutesEarlier(this DateTime value)
+        {
+            return value.SubtractMinutes(15);
         }
 
         public static DateTime AnHourLater(this DateTime value)
@@ -80,7 +83,7 @@ namespace Availabilities.Other
             return value.AddHours(-1);
         }
 
-        public static DateTime ToNearestQuarterHour(this DateTime current)
+        public static DateTime ToNextOrCurrentQuarterHour(this DateTime current)
         {
             if (current.Minute == 0 || current.Minute.IsDivisibleBy(15))
             {
@@ -147,6 +150,12 @@ namespace Availabilities.Other
             var roundUp = delta > interval.Ticks / 2;
 
             return roundUp ? dateTime.RoundUp(interval) : dateTime.RoundDown(interval);
+        }
+
+        private enum DateRounding
+        {
+            Up = 1,
+            Down = 2
         }
     }
 }

@@ -24,11 +24,21 @@ There will be a simple JSON API to reflect this kind of functionality:
 This API is already implemented in this codebase, but what is missing is the code managing the complex relationship between the bookings and availabilities services. Which is done through a "service" interface called `IAvailabilitiesService`.
 
 This is how availabilities work in the real world:
-* Availabilities are defined as a timeslot with a `StartUtc` and `EndUtc`. Adjacent timeslots will be merged into one availability (favoring the left side). These timeslots will be visualized on a giant calendar display.
-* The minimum availability that can be booked is defined as being from "noon 2020 (UTC)", and the maximum availability is defined as being "noon 2050 (UTC)". No bookings outside those times can be made.
-* Bookings can be made for a specific timeslot, and that timeslot must fully fit (wholly) into an existing availability timeslot in order to create the booking. (otherwise we throw a HTTP 409 - Conflict).
-* A booking cannot start before it ends, must be at least 15min long, no longer than 3hours long, and must not start in the past. (only bookings in teh future are accepted).
-* Booking start and end times are rounded up to the next nearest 15min time slot. (eg. if a booking is requested to start at 1:01PM, the booking will actually start at 1:15PM. eg. if a booking is requested to start at 1:00PM, the booking will also start at 1:00PM). 
+* Availabilities are defined as a timeslot with a `StartUtc` and `EndUtc`. Adjacent timeslots will be merged into one availability (favoring the left side). 
+  * These timeslots will be visualized on a giant calendar display.
+* The minimum availability that can be booked is defined as being from "noon 2020 (UTC)", and the maximum availability is defined as being "noon 2050 (UTC)". 
+  * No bookings outside those times can be made.
+* Bookings can be made for a specific timeslot, and that timeslot must fully fit (wholly) into an existing availability timeslot in order to create the booking. 
+  * Otherwise we throw a HTTP 409 - Conflict.
+* A booking cannot start before it ends
+  * Must be at least 15min long, no longer than 3hours long
+  * Must not start in the past. Only bookings in the future (within a minute tolerance) are accepted.
+  * eg if the time now (in the API) is 1:00:00PM and the booking was made for 12:59:59PM then it is permitted.
+* Booking start and end times are rounded up to the next nearest 15min time slot, (within a 1 minute tolerance)
+  * eg. if a booking is requested to start at 1:01:00PM, the booking will actually start at 1:15PM.
+  * eg. if a booking is requested to start at 1:29:00PM, the booking will actually start at 1:30PM.
+  * eg. if a booking is requested to start at 1:00:00PM, the booking will also start at 1:00PM.
+  * eg. if a booking is requested to start at 1:00:01PM, the booking will also start at 1:00PM.
 * Bookings can be created back to back (adjacent), no need for any time-margins between one booking ending and another starting.
 * Bookings are stored individually. Availabilities are stored individually, but availabilities are combined/merged into contiguous blocks of time, if they overlap or but up against each other (if they are adjacent).
 * When the system starts up and there are no bookings then, there is one availability in the system, starting at noon 2020 (UTC) and ending at noon 2050 (UTC).

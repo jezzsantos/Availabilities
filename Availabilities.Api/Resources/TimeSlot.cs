@@ -9,15 +9,20 @@ namespace Availabilities.Resources
         private DateTime end;
         private DateTime start;
 
-        public TimeSlot()
-            : this(MinValue, MaxValue)
-        {
-        }
-
         public TimeSlot(DateTime start, DateTime end)
         {
             this.start = start;
             this.end = end;
+        }
+
+        public TimeSlot(DateTime start, int durationInMinutes) : this(start, TimeSpan.FromMinutes(durationInMinutes))
+        {
+        }
+
+        public TimeSlot(DateTime start, TimeSpan duration)
+        {
+            this.start = start;
+            this.end = start.Add(duration);
         }
 
         public DateTime Start
@@ -51,7 +56,5 @@ namespace Availabilities.Resources
         }
 
         public TimeSpan Duration => this.end.Subtract(this.start);
-
-        public TimeSpan AbsoluteDuration => this.end.Subtract(this.start).Duration();
     }
 }

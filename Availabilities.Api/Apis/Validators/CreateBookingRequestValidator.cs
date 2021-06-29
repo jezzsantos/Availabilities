@@ -1,5 +1,6 @@
 ﻿using System;
 using Availabilities.Apis.ServiceOperations.Bookings;
+using Availabilities.Other;
 using ServiceStack.FluentValidation;
 
 namespace Availabilities.Apis.Validators
@@ -12,26 +13,28 @@ namespace Availabilities.Apis.Validators
             RuleFor(dto => dto.StartUtc)
                 .GreaterThanOrEqualTo(Validations.Availabilities.MinimumAvailability)
                 .WithMessage($"StartUtc must be after {Validations.Availabilities.MinimumAvailability:O}");
-            RuleFor(dto => dto.EndUtc)
-                .LessThanOrEqualTo(Validations.Availabilities.MaximumAvailability)
-                .WithMessage($"EndUtc must be before {Validations.Availabilities.MaximumAvailability:O}");
             RuleFor(dto => dto.StartUtc)
-                .GreaterThanOrEqualTo(DateTime.UtcNow)
+                .GreaterThanOrEqualTo(DateTime.UtcNow.SubtractMinutes(1))
                 .WithMessage("StartUtc must be in the future");
             RuleFor(dto => dto.StartUtc)
-                .NotEqual(dto => dto.EndUtc)
-                .WithMessage("StartUtc cannot be same as EndUtc");
-            RuleFor(dto => dto.StartUtc)
-                .LessThan(dto => dto.EndUtc)
-                .WithMessage("StartUtc must be before the EndUtc");
-            RuleFor(dto => dto.EndUtc)
-                .GreaterThanOrEqualTo(
-                    dto => dto.StartUtc.AddMinutes(Validations.Bookings.MinimumBookingLengthInMinutes))
-                .WithMessage($"EndUtc must be at least {Validations.Bookings.MinimumBookingLengthInMinutes}mins long");
-            RuleFor(dto => dto.EndUtc)
-                .LessThanOrEqualTo(dto => dto.StartUtc.AddMinutes(Validations.Bookings.MaximumBookingLengthInMinutes))
+                .GreaterThanOrEqualTo(Validations.Availabilities.MinimumAvailability)
+                .WithMessage($"StartUtc must be after {Validations.Availabilities.MinimumAvailability:O}");
+            RuleFor(dto => dto)
+                .Must(dto =>
+                    dto.StartUtc.AddMinutes(dto.DurationInMins) <= Validations.Availabilities.MaximumAvailability)
+                .WithMessage($"Booking cannot extend past {Validations.Availabilities.MaximumAvailability:O}");
+            RuleFor(dto => dto.DurationInMins)
+                .Must(duration => duration.IsDivisibleBy(Validations.Bookings.BookingIncrementInMinutes))
                 .WithMessage(
-                    $"EndUtc must not be more than {Validations.Bookings.MaximumBookingLengthInMinutes}mins long");
+                    $"DurationInMins must be in divisions of {Validations.Bookings.BookingIncrementInMinutes}mins");
+            RuleFor(dto => dto.DurationInMins)
+                .GreaterThanOrEqualTo(Validations.Bookings.MinimumBookingLengthInMinutes)
+                .WithMessage(
+                    $"DurationInMins must be at least {Validations.Bookings.MinimumBookingLengthInMinutes}mins long");
+            RuleFor(dto => dto.DurationInMins)
+                .LessThanOrEqualTo(dto => Validations.Bookings.MaximumBookingLengthInMinutes)
+                .WithMessage(
+                    $"DurationInMins must not be more than {Validations.Bookings.MaximumBookingLengthInMinutes}mins long");
         }
     }
 }
