@@ -17,52 +17,79 @@ At the bottom of this giant "screen" we want a tablet that the public can use to
 There will be a simple JSON API to reflect this kind of functionality:
 
 * `GET /availabilities` - returns a list of (contiguous) available time slots (each with an `Id`, `StartUtc`, `EndUtc`)
-* `POST /bookings` {`StartUtc`, `EndUtc`, `Description`} - creates a booking if and only if the timeslot is available, then reserves/removes availability for the duration of the booking.
+* `POST /bookings` {`StartUtc`, `DurationInMins`, `Description`} - creates a booking if and only if the timeslot is available, then reserves/removes availability for the duration of the booking.
 * `GET /bookings` - returns a collection of current bookings (each with `Id`, `StartUtc`, `EndUtc`, `Description`)
 * `DELETE /bookings/{Id}` - deletes a specific booking, and "releases" the availability it once occupied
 
-This API is already implemented in this codebase, but what is missing is the code managing the complex relationship between the bookings and availabilities services. Which is done through a "service" interface called `IAvailabilitiesService`.
+This API is already implemented in this codebase (areas that are ~~struck out~~ are already implemented), but what is missing is the code managing the complex relationship between the bookings and availabilities services. Which is done through a "service" interface called `IAvailabilitiesService`.
 
-This is how availabilities work in the real world:
-* Availabilities are defined as a timeslot with a `StartUtc` and `EndUtc`. Adjacent timeslots will be merged into one availability (favoring the left side). 
-  * These timeslots will be visualized on a giant calendar display.
-* The minimum availability that can be booked is defined as being from "noon 2020 (UTC)", and the maximum availability is defined as being "noon 2050 (UTC)". 
-  * No bookings outside those times can be made.
-* Bookings can be made for a specific timeslot, and that timeslot must fully fit (wholly) into an existing availability timeslot in order to create the booking. 
+This is how Availabilities and Bookings work in the real world:
+* All dates and times are in UTC.
+* The timeslots behind the availabilities will be visualized on a giant calendar display.
+* An `Availability` is defined as a notional "timeslot" with an `Id`, `StartUtc` and `EndUtc`. 
+  * The set of Availability will consist of contiguous timeslots, with no joins and only gaps in time.
+* ~~The minimum availability that can be booked is defined as being from "noon 2020 (UTC)", and the maximum availability is defined as being "noon 2050 (UTC)".~~ 
+  * ~~No bookings outside those times can be made.~~
+* Bookings can be made for a specific timeslot, and that timeslot must fully fit (wholly) inside (inclusive) an existing availability timeslot in order to create the booking. 
   * Otherwise we throw a HTTP 409 - Conflict.
-* A booking cannot start before it ends
-  * Must be at least 15min long, no longer than 3hours long
-  * Must not start in the past. Only bookings in the future (within a minute tolerance) are accepted.
-  * eg if the time now (in the API) is 1:00:00PM and the booking was made for 12:59:59PM then it is permitted.
-* Booking start and end times are rounded up to the next nearest 15min time slot, (within a 1 minute tolerance)
+  * If you make a Booking today from 4pm to 5pm, and there is existing Availability from 4pm to 5pm today, the Booking can be created.
+* ~~A booking cannot start before it ends~~
+  * ~~Must be at least 15min long, no longer than 3hours long~~
+  * ~~Must not start in the past. Only bookings in the future (within a minute tolerance) are accepted.~~
+  * ~~eg if the time now (in the API) is 1:00:00PM and the booking was made for 12:59:59PM then it is permitted.~~
+* Booking start and end times are automatically rounded-up by the API to the next nearest 15min timeslot, (within a 1 minute tolerance)
   * eg. if a booking is requested to start at 1:01:00PM, the booking will actually start at 1:15PM.
   * eg. if a booking is requested to start at 1:29:00PM, the booking will actually start at 1:30PM.
-  * eg. if a booking is requested to start at 1:00:00PM, the booking will also start at 1:00PM.
+  * eg. if a booking is requested to start at 1:00:00PM, the booking will start at 1:00PM.
   * eg. if a booking is requested to start at 1:00:01PM, the booking will also start at 1:00PM.
-* Bookings can be created back to back (adjacent), no need for any time-margins between one booking ending and another starting.
-* Bookings are stored individually. Availabilities are stored individually, but availabilities are combined/merged into contiguous blocks of time, if they overlap or but up against each other (if they are adjacent).
-* When the system starts up and there are no bookings then, there is one availability in the system, starting at noon 2020 (UTC) and ending at noon 2050 (UTC).
-* When a booking is created or cancelled, and the booking timeslot overlaps with any existing Availability timeslots, then those Availability timeslots are merged/extended/split to encapsulate that new timeslot. The sequence of availabilities that are stored will therefore never be immediately adjacent to each other or overlap with each other, and therefore should be separated in time by at least 15mins.
-* When a booking is "reserved" (ie. a booking is created) the booked timeslot is "punched out" from an availability that must exist for that timeslot.
-  * In some cases, this timeslot will shorten the start or end of an existing Availability
+* Bookings can be created back to back (adjacent), no need for any time-margins between one booking ending and another starting (no overlapping).
+* ~~Bookings are stored individually. Availabilities are stored individually~~, but availabilities are combined/merged into contiguous blocks of time (if they are created as overlapped or butted-up against each other).
+* ~~When the system starts up and there are no bookings then, there is one availability in the system, starting at noon 2020 (UTC) and ending at noon 2050 (UTC).~~
+* When a booking is created or cancelled, and the booking timeslot coincides with any existing Availability timeslots, then those Availability timeslots are merged/extended/split to encapsulate that new timeslot. The resulting sequence of availabilities that are stored will therefore never be immediately adjacent to each other or overlap with each other, and therefore overall the timeline of availabilities should be separated (in time) by gaps at least 15mins long.
+* When a booking is "reserved" (ie. a booking is created) the booked timeslot is "punched out" from an existing Availability (that must have existed for that timeslot).
+  * In some cases, this timeslot will shorten the start or end date of an existing Availability.
   * In some cases this timeslot will divide an existing Availability into two parts (shortening the existing Availability, and creating a new Availability)
 * When a booking is "released" (ie. a booking is cancelled) the timeslot representing the booked time is added/merged back into set of existing Availabilities.
   * In some cases, this timeslot will extend the timeslot of an existing Availability (if adjacent to or overlapping the end of an existing Availability)
-  * In some cases, this timeslot will force a merge of two or more availabilities, requiring the deletion of one or more availabilities that are now eclipsed by a larger availability. 
-  * In some cases this will add a new availability, detached from existing Availabilities.
-* In any case, whenever a timeslot is added or removed it must result in a linear list of availabilities that never overlap with each other, and must never be adjacent to each other (in time), separated by at least 15mins of time between them.
+  * In some cases, this timeslot will force a merge of two or more Availabilities, requiring the deletion of one or more availabilities that are now eclipsed by a larger Availability. 
+  * In some cases this will add a new Availability, detached from existing Availabilities.
+* In any case, whenever a timeslot is added or removed from the Availabilities it must result in a linear list of Availability that never overlap with each other, and must never be adjacent to each other (in time), separated by gaps at least 15mins long.
+
+For example:
+There would be only one availability, that looks like this timeline, when there are no bookings in the system:
+
+          |--------------------------------------------------------------------------------------------|
+2020-01-01T00:00:00.000Z                                                                     2020-01-01T00:00:00.000Z
+
+When you create a new Booking, such as this one:
+                                        |------------------------------|
+                                     StartUtc                    +DurationInMins
+
+The existence of that Booking would have this effect on breaking the set of Availabilities into two pieces:
+
+          |-----------------------------|                              |-------------------------------|
+2020-01-01T00:00:00.000Z             StartUtc                        EndUtc                  2020-01-01T00:00:00.000Z
+
+If that same Booking was to be cancelled/deleted, then the Availabilities would be restored to this single: 
+
+          |--------------------------------------------------------------------------------------------|
+2020-01-01T00:00:00.000Z                                                                     2020-01-01T00:00:00.000Z
+
+
+## Caveats
 
 For the purposes of this exercise, both logical domains (Bookings and Availabilities) are in the same monolithic deployment package, and no attempt should be made to separate them into separate physical domains or services. 
 
 They will however, need to coupled through well-defined interfaces (eg. the `IAvailabilitiesApplication`) so that they can communicate with each other. No coupling at the API or data store level is permitted. (as far as you know there is no formal database and joining tables and querying will be forbidden)
 
-The data store behind this API (right now) is an in-memory store that has been deliberately included to hide away from you (make it difficult to "see") the actual stored data, so that you don't focus on it, or its schema or design, as you might be used to doing in SQL crud-like systems. That is a distraction for this exercise.
+The data store behind this API (right now) is already implemented as an in-memory store that has been deliberately included to hide away from you (make it difficult to "see") the actual stored data, so that you don't focus on it, or its schema or design, as you might be used to doing in SQL crud-like systems. That is a distraction for this exercise.
 
 # Instructions
 
 * Install Jetbrains Rider IDE.
 * Fork this source code repo to your own git repo, and checkout the `master` branch
-* Hit F5 to run the API, and use Postman (or similar) to call the API's above, for example,`GET https://localhost:5001/api/availabilities` should return the data, something like this:
+* Hit F5 to run the API, and use Postman (or similar tools) to call the API's above, for example,`GET http://localhost:5000/api/availabilities` should return the data, something like this:
+
 ```json
 {
     "availabilities": [
@@ -75,15 +102,26 @@ The data store behind this API (right now) is an in-memory store that has been d
 }
 ```
 
-## Step 1
-Now, you have an hour to complete the implementation of the `IAvailabilitiesApplication` interface to achieve the goals of the first exercise. Some of the rules above have already been encoded into the request validation layer (eg. `CreateBookingRequestValidator.cs`). Other rules must be coded by you.
+Now, create a new Booking with this API: `POST https://localhost:5000/bookings` including data such as this:
 
-Do this work in a pair (if available), and ignore any test-driven-development approaches. Just go about coding the solution as you normally would today.
+```json
+{
+    "startUtc": "2023-01-01T12:00:00.0000000Z",
+    "durationInMins": 15
+}
+
+```
+
+## Step 1
+Now, you have 1 hour to complete the implementation of the `IAvailabilitiesApplication` interface to complete this API and achieve the goals of the first exercise. Some of the rules above (that are already ~~stuck out~~) have already been encoded into the request validator (`CreateBookingRequestValidator.cs`). The rest is up to you to codify.
+
+Recommendation: Do this work in a pair (if available), and ignore any test-driven-development approaches. Just go about coding the solution as you normally would today, and try to give yourself an hour to do it. If you run over the hour, I don't really care, the point is to simulate the conditions that you experience at work everyday (and we can then see how that affects your output given how you code today).
 
 ## Step 2
 
-Next step, we will explore another approach for doing the same thing, but using some other practices. 
+Next step, we will explore another approach for doing the same exercise, but using some slightly different practices. 
 
 You will create a separate fork of this repo for that, when we get there. Your instructor will lead this next part.
 
-> A footnote about trickery: There are no tricks here. There are no intentional traps for you to fall into. We are not interested so much in the correct solution that you come up with, we are interested in learning from how you write code today, and how you might change that in the future, to level up your skills. The problem set out here is from a real product, and you have about 2/3rds of the complexity of the real solution to solve here. This specific challenge was chosen because this kind of problem is fairly common in scheduling systems, and IMHO is a good one to get started with better design.
+> A footnote about trickery: There are no tricks here. There are no intentional traps for you to fall into. We are not interested so much in the correctness of the solution that you come up with here, we are more interested in you learning from how you write code today, and how you might change that in the future, to level up your skills. 
+> The problem laid out here is close to one from a real product (and you have about 2/5rds of the complexity of the real solution to solve here). This specific challenge was chosen because this kind of product problem is fairly common in many scheduling systems, and IMHO is a good one to get started with learning better design, without resorting to academic and unrelated puzzles ot your daily work.
