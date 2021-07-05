@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Availabilities.Api", "Availabilities.Api\Availabilities.Api.csproj", "{9312AF09-C149-46CF-BC9F-3C3DB31F3558}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Availabilities.Api.Tests", "Availabilities.Api.Tests\Availabilities.Api.Tests.csproj", "{9D1E1C55-EBFB-48BF-A78A-AEA4F19008ED}"
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{3103855A-2919-4A07-B6D1-DB4A40A767D3}"
 ProjectSection(SolutionItems) = preProject
 	README.md = README.md
@@ -17,5 +19,9 @@ Global
 		{9312AF09-C149-46CF-BC9F-3C3DB31F3558}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9312AF09-C149-46CF-BC9F-3C3DB31F3558}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9312AF09-C149-46CF-BC9F-3C3DB31F3558}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9D1E1C55-EBFB-48BF-A78A-AEA4F19008ED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9D1E1C55-EBFB-48BF-A78A-AEA4F19008ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9D1E1C55-EBFB-48BF-A78A-AEA4F19008ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9D1E1C55-EBFB-48BF-A78A-AEA4F19008ED}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
