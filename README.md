@@ -113,9 +113,39 @@ Now, create a new Booking with this API: `POST https://localhost:5000/bookings` 
 ```
 
 ## Step 1
-Now, you have 1 hour to complete the implementation of the `IAvailabilitiesApplication` interface to complete this API and achieve the goals of the first exercise. Some of the rules above (that are already ~~stuck out~~) have already been encoded into the request validator (`CreateBookingRequestValidator.cs`). The rest is up to you to codify.
 
-Recommendation: Do this work in a pair (if available), and ignore any test-driven-development approaches. Just go about coding the solution as you normally would today, and try to give yourself an hour to do it. If you run over the hour, I don't really care, the point is to simulate the conditions that you experience at work everyday (and we can then see how that affects your output given how you code today).
+
+### Getting your bearings
+
+The code base is loosely structured in layers (ApiService -> Application -> Storage), and we don't yet define a domain layer. The patterns are loosely based off of ports and adapters architecture.
+
+> Note: These are not strict production code patterns, this is just an exercise
+
+The API layer contains a class `AvailabilititesService.cs` which represents all your public REST API's. (similar to ASP.NET Controllers, but we are using ServiceStack here).
+
+The API layer also includes request validators, (eg. `CreateBookingRequestValidator.cs` etc.) these validators are auto-wired up by ServiceStack, no coding required. They are automatically run when an inbound HTTP request is received, and your code in the service class (`AvailabilitiesService.cs` is only invoked when the validator passes).
+
+> Note: You need to define a request validator for every inbound API call  
+
+Notice that every API call (in `AvailabilitiesService.cs`) defines a method with the same name as the HTTP verb, and also the type of the one and only parameter passed to the method (we call it a "Request DTO") defines a `[Route]` attribute that also defines the allowable verbs.
+
+Finally, every API call unwraps all data from the various parts of the request (QueryString, Body, Headers etc), and delegates that call to the Application Layer component.
+
+The Application Layer either returns data to the API layer to construct a response, or the Application Layer throws an exception to describe a 4XX or 500 response. The mappings that define Exception->HTTP StatusCode are defined in `ServiceHost.cs`.
+
+> The Application layer should never have any knowledge about HTTP requests (ever!)
+
+### Get started
+
+Now, you have 1 hour to complete the implementation of the `IAvailabilitiesApplication` interface to complete this API and achieve the goals of the first exercise (Notes are in there to guide you). 
+
+Some of the rules above (that are already ~~stuck out~~) have already been encoded into the request validator (`CreateBookingRequestValidator.cs`). The rest is up to you to codify.
+
+Recommendation: Do this work in a pair (if available), and ignore any test-driven-development approaches. 
+
+Just go about coding the solution as you normally would today, and try to give yourself one hour to get it done. 
+
+> If you run over the hour, it does not really matter, the point of this constraint is to simulate the conditions that you experience at work everyday (and we can then see how that affects your output given how you coding practices today).
 
 ## Step 2
 
