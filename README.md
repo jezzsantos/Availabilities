@@ -87,8 +87,12 @@ The data store behind this API (right now) is already implemented as an in-memor
 # Instructions
 
 * Install Jetbrains Rider IDE.
+* Install .NET6
+* Make sure to run `dotnet dev-certs https --trust`
 * Fork this source code repo to your own git repo, and checkout the `master` branch
-* Hit F5 to run the API, and use Postman (or similar tools) to call the API's above, for example,`GET http://localhost:5000/api/availabilities` should return the data, something like this:
+* Hit F5 to run the API, and use PostMan (or similar tools) to call the API's above, for example,`GET https://localhost:5001/api/availabilities` should return the data, something like this:
+
+> Note: In PostMan you may need to disable "SSL certification verification" so that you can use the built-in dotnet development certificate.
 
 ```json
 {
@@ -101,16 +105,18 @@ The data store behind this API (right now) is already implemented as an in-memor
     ]
 }
 ```
+> Note: Add the `Accept: application/json` header to the request in PostMan
 
-Now, create a new Booking with this API: `POST https://localhost:5000/bookings` including data such as this:
+Now, create a new Booking with this API: `POST https://localhost:5001/api/bookings` including data such as this:
 
 ```json
 {
     "startUtc": "2023-01-01T12:00:00.0000000Z",
     "durationInMins": 15
 }
-
 ```
+
+> Note: that you should receive a `405-NotImplementedException`, which is the correct response, since at this point, we have no code, and the code just throws a `NotImplementedException`
 
 ## Step 1
 
