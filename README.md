@@ -51,7 +51,7 @@ This is how Availabilities and Bookings work in the real world:
   * In some cases, this timeslot will divide an existing Availability into two parts (shortening the existing Availability, and creating a new Availability)
 * When a booking is "released" (ie. a booking is cancelled) the timeslot representing the booked time is added/merged back into set of existing Availabilities.
   * In some cases, this timeslot will extend the timeslot of an existing Availability (if adjacent to or overlapping the end of an existing Availability)
-  * In some cases, this timeslot will force a merge of two or more Availabilities, requiring the deletion of one or more availabilities that are now eclipsed by a larger Availability. 
+  * In some cases, this timeslot will force a merge of two Availabilities, requiring the deletion of one availability that is now eclipsed by a larger resulting Availability. 
   * In some cases, this will add a new Availability, detached from existing Availabilities.
 * In any case, whenever a timeslot is added or removed from the Availabilities it must result in a linear list of Availability that never overlap with each other, and must never be adjacent to each other (in time), separated by gaps at least 15mins long.
 
